@@ -33,22 +33,22 @@ void setup(){
 void loop(){
   //delay(3000);
 //  Serial.println(String(encoderCountLeft) + ", " + String(encoderCountRight));
-  //moveForward(160);
-  //rotateRight(90);
+  //moveForward(120);
+  rotateRight(810);
 //  duration1 = pulseIn(encoderPin1, HIGH);
 //  duration2 = pulseIn(encoderPin2, HIGH);
-        if (Serial.available() > 0) {
-                // read the incoming byte:
-                int incomingByte = Serial.parseInt();
-
-                // say what you got:
-                Serial.print("I received: ");
-                Serial.println(incomingByte, DEC);
-
-                rotateRight(int(incomingByte));
-        }
+//        if (Serial.available() > 0) {
+//                // read the incoming byte:
+//                int incomingByte = Serial.parseInt();
+//
+//                // say what you got:
+//                Serial.print("I received: ");
+//                Serial.println(incomingByte, DEC);
+//
+//                rotateRight(int(incomingByte));
+//        }
 //  Serial.println(String(encoderCountLeft) + ", " + String(encoderCountRight));
-  
+  delay(1000000);
 }
 
 void incLeft() {
@@ -63,7 +63,7 @@ double tuneWithPID() {
   Serial.println(String(encoderCountLeft) + ", " + String(encoderCountRight) + ", " + String(encoderCountLeft - encoderCountRight));
   double kp, ki, kd, p, i, d;
 
-  kp=15;
+  kp=15; // trial and error 
   ki=0;
   kd=0;
 
@@ -86,7 +86,7 @@ void moveForward(double cmDis) {
   encoderCountLeft = 0, encoderCountRight = 0;   
   error = 0, integral = 0, last_tick = 0;
 
-  target_Tick = cmDis * 30.25;
+  target_Tick = cmDis * 30.25; // Caliberated to 30.25 ticks per cm 
   
   while (encoderCountLeft < target_Tick ){
     pid = tuneWithPID();
