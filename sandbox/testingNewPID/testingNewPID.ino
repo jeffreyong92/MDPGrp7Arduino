@@ -1,5 +1,7 @@
 #include "DualVNH5019MotorShield.h"
 #include "PinChangeInt.h"
+#include <PID_v1.h>
+
 
 DualVNH5019MotorShield md;
 
@@ -8,12 +10,16 @@ DualVNH5019MotorShield md;
 #define pinSwitch 8
 
 unsigned long duration1, duration2;
-volatile long encoderCountLeft = 0, encoderCountRight = 0;
+double encoderCountLeft = 0, encoderCountRight = 0;
 
 double target_Tick = 0, last_tick = 0; 
 double error = 0, integral = 0;
+unsigned long lastTime=0;
+double lastInput = 0;
+double ITerm =0;
 
-int pid = 0;
+double pid = 0;
+PID myPID(&encoderCountRight, &pid, &encoderCountLeft, 15, 0, 0, DIRECT);
 
 
 void setup(){
@@ -23,7 +29,7 @@ void setup(){
   pinMode(pinEncoderL, INPUT);
   pinMode(pinEncoderR, INPUT);
   pinMode(pinSwitch, INPUT);
-  
+//  myPID.SetSampleTime(5);
   PCintPort::attachInterrupt(pinEncoderL, incLeft, RISING);
   PCintPort::attachInterrupt(pinEncoderR, incRight, RISING);
   
@@ -34,7 +40,7 @@ void loop(){
   //delay(3000);
 //  Serial.println(String(encoderCountLeft) + ", " + String(encoderCountRight));
   moveForward(120);
-  //rotateRight(810);
+//  rotateRight(810);
 //  duration1 = pulseIn(encoderPin1, HIGH);
 //  duration2 = pulseIn(encoderPin2, HIGH);
 //        if (Serial.available() > 0) {
@@ -89,7 +95,15 @@ void moveForward(double cmDis) {
   target_Tick = cmDis * 30.25; // Caliberated to 30.25 ticks per cm 
   
   while (encoderCountLeft < target_Tick ){
+//    pid = tuneWithPID();
+//   Serial.println(encoderCountLeft);
+//   Serial.println(encoderCountRight);
+//   if( myPID.Compute()){
+//    Serial.println("PID WORKS");
+//   }
+//    pid = tuneWithPID2();
     pid = tuneWithPID();
+    Serial.println(pid);
     md.setSpeeds(200 - pid, 200 + pid);
   }
   
@@ -111,5 +125,25 @@ int rotateRight(double angle) {
     md.setSpeeds(200 - pid, -(200 + pid));
   }
   md.setBrakes(400,400);
+}
+
+
+double tuneWithPID2(){
+   double ki=0,kp=15,kd=0;
+   unsigned long now = millis();
+   unsigned long timeChange = (now - lastTime);
+      /*Compute all the working error variables*/
+      double input = encoderCountRight;
+      double error = encoderCountLeft - input;
+      ITerm+= (ki * error);
+      double dInput = (input - lastInput);
+      /*Remember some variables for next time*/
+      lastInput = encoderCountRight;
+      lastTime = now;
+ 
+      /*Compute PID Output*/
+      double output = kp * error + ITerm- kd * dInput;
+      return output;
+      
 }
 
